@@ -1,30 +1,42 @@
-const	addTaskDinamic = (objectTask) =>
+const	addTask = (toDoObject) =>
 {
 	const	toDoList = document.getElementById("todo-list");
 	const	doneList = document.getElementById("done-list");
-	let	div = document.createElement("div");
-	let p = document.createElement("p");
-	let checkbox = document.createElement("input");
-	let	index = objectTask.id;
-		
-	div.setAttribute("id", `div${index}`);
-	p.setAttribute("id", `p${index}`);
-	checkbox.setAttribute("type", "checkbox");
-	checkbox.setAttribute("class", "cb");
-	checkbox.setAttribute("id", `cb${index}`);
-	if (objectTask.status === 0)
+	let		div;
+	let		p;
+	let 	checkbox;
+	let		index;
+
+	//toDoObject[1].status = 1;
+	for (let i = 0; i < toDoObject.length; i++)
 	{
-		p.setAttribute("class", "edit");
-		toDoList.appendChild(div);
-		//toDoList.appendChild(p);
+		index = toDoObject[i].id;
+		div = document.createElement("div");
+		div.setAttribute("id", `div${index}`);
+		p = document.createElement("p");
+		p.setAttribute("id", `p${index}`);
+		checkbox = document.createElement("input");
+		checkbox.setAttribute("type", "checkbox");
+		checkbox.setAttribute("class", "cb");
+		checkbox.setAttribute("id", `cb${index}`);
+		if (toDoObject[i].status === 0)
+		{
+			document.getElementById('todo-notask').style.display = "none";
+			p.setAttribute("class", "edit");
+			p.setAttribute("contentEditable", "true");
+			toDoList.appendChild(div);
+		}
+		else
+		{
+			document.getElementById('done-notask').style.display = "none";
+			doneList.appendChild(div);
+		}
 		document.getElementById(`div${index}`).appendChild(p);
-		document.getElementById(`p${index}`).contentEditable = "true";
 		document.getElementById(`div${index}`).appendChild(checkbox);
+		document.getElementById(`p${index}`).innerText = toDoObject[i].activity;
 	}
-	else
-		doneList.appendChild(p);
-	document.getElementById(`p${index}`).innerText = objectTask.activity;
-	console.log([...objectTask]);
+	console.log(toDoObject);
+	return (document.getElementsByClassName('edit'));
 }
 
 /**
@@ -50,7 +62,7 @@ const	jsonInitializer = (task) =>
 	}
 	arr[0] = toDo;
 	console.log(JSON.stringify(arr));
-	addTaskDinamic(toDo);
+	addTask(arr);
 	return (JSON.stringify(arr));
 }
 
@@ -58,17 +70,19 @@ const	newTask = (task) =>
 {
 	const	toDoObject = JSON.parse(localStorage.toDo);
 	const	identifier = toDoObject.length;
-
+	const	arr = [];
 	const	toDo = 
 	{
 		id: identifier,
 		activity: task,
 		status: 0,
 	}
+	arr[0] = toDo;
 	toDoObject.push(toDo);
 	localStorage.removeItem("toDo");
 	localStorage.setItem("toDo", JSON.stringify(toDoObject));
-	addTaskDinamic(toDo);
+	addTask(arr);
+	console.log(arr.length);
 	console.log(localStorage.toDo);
 }
 
@@ -82,54 +96,21 @@ const	createTask = (task) =>
 	}
 }
 
-const	storageWrite = () =>
-{
-	const	toDoList = document.getElementById("todo-list");
-	const	doneList = document.getElementById("done-list");
-	const	toDoObject = JSON.parse(localStorage.toDo);
-	let		div;
-	let		p;
-
-	//toDoObject[3].status = 1;
-	for (let i = 0; i < toDoObject.length; i++)
-	{
-		div = document.createElement("div");
-		div.setAttribute("id", `div${i}`);
-		p = document.createElement("p");
-		p.setAttribute("id", `p${i}`);
-		if (toDoObject[i].status === 0)
-		{
-			p.setAttribute("class", "edit");
-			toDoList.appendChild(div);
-			//toDoList.appendChild(p);
-			document.getElementById(`div${i}`).appendChild(p);
-			document.getElementById(`p${i}`).contentEditable = "true";
-		}
-		else
-			doneList.appendChild(p);
-		document.getElementById(`p${i}`).innerText = toDoObject[i].activity;
-	}
-	console.log(toDoObject);
-	return (document.getElementsByClassName('edit'));
-}
-
 const	listPopulate = async() =>
 {
 	const	toDoList = document.getElementById("todo-list");
 	const	doneList = document.getElementById("done-list");
+	let		toDoObject;
 	let		elements;
 
 	if (!localStorage.toDo)
 	{
-		let message = document.createElement("h5");
-		message.setAttribute("id", "opening-message");
-		toDoList.appendChild(message);
-		document.getElementById("opening-message").innerText = "No tasks added yet";
-		doneList.appendChild(message.cloneNode(true));
+		return (0);
 	}
 	else
 	{
-		elements = storageWrite();
+		toDoObject = JSON.parse(localStorage.toDo);
+		elements = addTask(toDoObject);
 	}
 	return (elements);
 }
@@ -204,7 +185,7 @@ const	updateListener = (elements) =>
 	}
 }
 
-const	checkboxSet = (elements) =>
+/*const	checkboxSet = (elements) =>
 {
 	const	elemenstArray = [...elements];
 	let		checkbox;
@@ -219,7 +200,7 @@ const	checkboxSet = (elements) =>
 		checkbox.setAttribute("id", `cb${index}`);
 		document.getElementById(`div${index}`).appendChild(checkbox);
 	}
-}
+}*/
 
 /**
  * This function helps determine if the checkboxes were all 
@@ -253,7 +234,7 @@ const	checkboxListener = (elements) =>
 {
 	let	checkboxList;
 
-	checkboxSet(elements);
+	//checkboxSet(elements);
 	checkboxList = [...document.getElementsByClassName("cb")];
 	for (let checkbox of checkboxList)
 	{
