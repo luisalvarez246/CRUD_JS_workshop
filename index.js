@@ -249,11 +249,10 @@ const	allUnchecked = (checkboxList) =>
 	return (false);
 }
 
-const	checkboxListener = (elements) =>
+const	checkboxListener = () =>
 {
 	let	checkboxList;
 
-	//checkboxSet(elements);
 	checkboxList = [...document.getElementsByClassName("cb")];
 	for (let checkbox of checkboxList)
 	{
@@ -318,7 +317,6 @@ const	reorderDiv = (divArray) =>
 	return (sortedDivArray);
 }
 
-//now it is not possible to delete task when there's only one.
 const	removeTask = () =>
 {
 	let		div	= [...document.getElementsByTagName("div")];
@@ -395,7 +393,7 @@ const	mainListener = async(newTasksSet) =>
 	if (!elements)
 		return (0);
 	console.log(elements);
-	checkboxListener(elements);
+	checkboxListener();
 	keyboardListener(elements);
 	updateListener(elements);
 }
