@@ -33,7 +33,7 @@ main
     align-items: flex-start;
 }
 
-#save-btn, #done-btn, #remove-btn
+#save-btn, #done-btn, #remove-btn, #todo-btn
 {
 	display: none;
 }
@@ -45,7 +45,27 @@ main
 	flex-direction: row-reverse;
 }*/
 
-div {
+div 
+{
     display: flex;
     flex-direction: row-reverse;
 }
+
+button
+{
+	border: none;
+	padding: 10px 20px;
+	margin: 0.5rem;
+}
+
+#save-btn, #todo-btn, #done-btn
+{
+	background-color: lightgreen;
+}
+
+#remove-btn
+{
+	background-color: rgb(218, 140, 159);
+	color: white;
+}
+

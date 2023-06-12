@@ -7,7 +7,6 @@ const	addTask = (toDoObject) =>
 	let 	checkbox;
 	let		index;
 
-	//toDoObject[1].status = 1;
 	for (let i = 0; i < toDoObject.length; i++)
 	{
 		index = toDoObject[i].id;
@@ -81,25 +80,24 @@ const	newTask = (task) =>
 	toDoObject.push(toDo);
 	localStorage.removeItem("toDo");
 	localStorage.setItem("toDo", JSON.stringify(toDoObject));
-	addTask(arr);
-	console.log(arr.length);
-	console.log(localStorage.toDo);
+	return (addTask(arr));
 }
 
 const	createTask = (task) =>
 {
+	let	newTasksSet;
+
 	if (!localStorage.toDo)
 		localStorage.setItem("toDo", jsonInitializer(task));
 	else
 	{
-		newTask(task);
+		newTasksSet = newTask(task);
+		mainListener(newTasksSet);
 	}
 }
 
 const	listPopulate = async() =>
 {
-	const	toDoList = document.getElementById("todo-list");
-	const	doneList = document.getElementById("done-list");
 	let		toDoObject;
 	let		elements;
 
@@ -115,6 +113,13 @@ const	listPopulate = async() =>
 	return (elements);
 }
 
+
+/**
+ * first index is for the changes object;
+ * In case we have tasks in done, toDoObject order will differ changes. Then it is necessary
+ * to point the right index. That's where the expression changes[index].id.match(/\d+/)[0]
+ * shines, letting us retrieve the id associated to the change object.
+ */
 const	saveChanges = () =>
 {
 	let 	changes = [...document.getElementsByClassName('edit')];
@@ -126,6 +131,7 @@ const	saveChanges = () =>
 	{
 		newActivity = change.innerText;
 		index = changes.indexOf(change);
+		index = Number(changes[index].id.match(/\d+/)[0]);
 		toDoObject[index].activity = newActivity;
 	}
 	localStorage.removeItem("toDo");
@@ -168,19 +174,32 @@ const	keyboardListener = (elements) =>
  * In this function we first convert an HTML collection to array using
  * spread operator.
  * then we iterate each element of the array.
- * we use indexOf method to determine which element was changed.
+ * 
+ * Second for loop is used to hide save-btn in case the user
+ * deletes the changes made manually.
  * @param {*} elements 
  */
 const	updateListener = (elements) =>
 {
-	let arr = [...elements];
+	let 	arr = [...elements];
+	const	toDoObject = JSON.parse(localStorage.toDo);
+	let		index;
+	let		i;
 
 	for (let element of arr)
 	{
 		element.addEventListener("input", () =>
 		{
-			console.log(arr.indexOf(element));
 			document.getElementById("save-btn").style.display = "block";
+			i = 0;
+			for (let element of arr)
+			{
+				index = Number(element.id.match(/\d+/)[0]);
+				if (element.innerText === toDoObject[index].activity)
+					i++;
+			}
+			if (i === arr.length)
+				document.getElementById("save-btn").style.display = "none";
 		})
 	}
 }
@@ -240,35 +259,80 @@ const	checkboxListener = (elements) =>
 	{
 		checkbox.addEventListener("change", (event)=>
 		{
-			if (event.target.checked)
+			const	status = event.target.parentElement.parentElement.id;
+			let		doneButton = document.getElementById("done-btn");
+			let		toDoButton = document.getElementById("todo-btn");
+
+			if (event.target.checked && status === "todo-list" && toDoButton.style.display === "block")
 			{
-				document.getElementById("done-btn").style.display = "block";
+				toDoButton.style.display = "none";
+			}
+			else if (event.target.checked && status === "done-list" && doneButton.style.display === "block")
+			{
+				doneButton.style.display = "none";
+			}
+			else if (event.target.checked && status === "todo-list")
+			{
+				doneButton.style.display = "block";
+				document.getElementById("remove-btn").style.display = "block";
+			}
+			else if (event.target.checked && status === "done-list")
+			{
+				toDoButton.style.display = "block";
 				document.getElementById("remove-btn").style.display = "block";
 			}
 			else if (allUnchecked(checkboxList) === true)
 			{
-				document.getElementById("done-btn").style.display = "none";
+				doneButton.style.display = "none";
+				toDoButton.style.display = "none";
 				document.getElementById("remove-btn").style.display = "none";
 			}
 		})
 	}
 }
 
+const	reorderId = (toDoObject) =>
+{
+	for (let i = 0; i < toDoObject.length; i++)
+	{
+		toDoObject[i].id = i;
+	}
+	return (toDoObject);
+}
+
+const	reorderDiv = (divArray) =>
+{
+	let sortedDivArray;
+
+	sortedDivArray = divArray.sort((a, b) => 
+	{
+		const divA = a.id;
+		const divB = b.id;
+
+		if (divA < divB)
+		  return (-1);
+		if (divA > divB) 
+		  return (1);
+		return (0);
+	});
+	return (sortedDivArray);
+}
+
 //now it is not possible to delete task when there's only one.
 const	removeTask = () =>
 {
-	const	div	= [...document.getElementsByTagName("div")];
-	const	toDoObject = JSON.parse(localStorage.toDo);
+	let		div	= [...document.getElementsByTagName("div")];
+	let		toDoObject = JSON.parse(localStorage.toDo);
 	const	spliceArray = [];
 	let		index = 0;
 	let		n;
 
-	
+	div = reorderDiv(div);
 	for (let i = 0; i < div.length; i++)
 	{
 		if (div[i].childNodes[1].checked === true)
 		{
-			document.getElementById(`div${i}`).remove();
+			div[i].remove();
 			spliceArray[index++] = i;
 		}
 	}
@@ -282,15 +346,51 @@ const	removeTask = () =>
 		}
 		n--;
 	}
-	console.log(n);
-	console.log(spliceArray[index - 1]);
+	toDoObject = reorderId(toDoObject);
 	console.log(toDoObject);
-	console.log(div[0].childNodes[1].checked);
+	localStorage.removeItem("toDo");
+	localStorage.setItem("toDo", JSON.stringify(toDoObject));
+	document.getElementById("remove-btn").style.display = "none";
+	document.getElementById("done-btn").style.display = "none";
+	document.getElementById("todo-btn").style.display = "none";
 }
 
-const	mainListener = async() =>
+const	markAsDone = (status) =>
 {
-	let	elements = await listPopulate();
+	let		div	= [...document.getElementsByTagName("div")];
+	let		toDoObject = JSON.parse(localStorage.toDo);
+	const	doneList = document.getElementById("done-list");
+	const	toDoList = document.getElementById("todo-list");
+	
+	
+	div = reorderDiv(div);
+	for (let i = 0; i < div.length; i++)
+	{
+		if (div[i].childNodes[1].checked === true && status === 1)
+		{
+			div[i].childNodes[1].checked = false;
+			doneList.appendChild(div[i]);
+			toDoObject[i].status = status;
+		}
+		else if (div[i].childNodes[1].checked === true && status === 0)
+		{
+			div[i].childNodes[1].checked = false;
+			toDoList.appendChild(div[i]);
+			toDoObject[i].status = status;
+		}
+	}
+	localStorage.removeItem("toDo");
+	localStorage.setItem("toDo", JSON.stringify(toDoObject));
+	document.getElementById("done-btn").style.display = "none";
+	document.getElementById("todo-btn").style.display = "none";
+	document.getElementById("remove-btn").style.display = "none";
+	document.getElementById('todo-notask').style.display = "none";
+	document.getElementById('done-notask').style.display = "none";
+}
+
+const	mainListener = async(newTasksSet) =>
+{
+	let	elements = newTasksSet || await listPopulate();
 
 	if (!elements)
 		return (0);
